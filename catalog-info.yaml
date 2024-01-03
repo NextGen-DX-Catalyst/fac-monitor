@@ -1,0 +1,103 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: monitor
+  title: Monitor
+  description: "Monitor detects if your customers are on government watchlists, using modern APIs that reduce false positives and increase efficiency. Monitor screens users against a number of sanction and PEP lists. Sanction lists are updated daily and can be used for daily automated re-scans. Any hits will be exposed via both a user-friendly dashboard UI and via API, for use with either manual or automated review workflows. Monitor also integrates directly with Identity Verification for an end-to-end verification and KYC solution."
+  annotations:
+    github.com/project-slug: ${{values.destination.owner + "/" + values.destination.repo}}
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: production
+  owner: fraud-and-compliance
+  system: monitor
+  providesApis:
+    - monitor-api
+  consumesApis:
+    - identity-verification-api
+  dependsOn:
+    - component:transaction-monitoring
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: monitor-api
+  title: Monitor API
+  description: Use with Identity Verification to enable sanction, PEP, and watchlist screening for anti-money laundering compliance.
+spec:
+  type: openapi
+  lifecycle: production
+  owner: fraud-and-compliance
+  system: monitor
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: Auth API
+      description: API for retrieving bank account information for ACH transactions using Plaid.
+      version: "1.0.0"
+      contact:
+        name: Payments Team
+        email: payments-team@yourcompany.com
+      license:
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+    servers:
+      - url: https://api.yourcompany.com
+        description: Production server
+
+    paths:
+      /auth/get:
+        x-plaid-business-unit-context: BUSINESS_UNIT_PLAID
+        post:
+          tags:
+            - plaid
+          summary: Retrieve auth data
+          externalDocs:
+            url: /api/products/auth/#authget
+          operationId: authGet
+          description: |-
+            The `/auth/get` endpoint returns the bank account and bank identification numbers...
+            # [Truncated for brevity, include your full description here]
+          responses:
+            "200":
+              description: success
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/AuthGetResponse'
+                  examples:
+                    example-1:
+                      value:
+                        accounts:
+                          - account_id: vzeNDwK7KQIm4yEog683uElbp9GRLEFXGK98D
+                            balances:
+                              available: 100
+                              current: 110
+                              limit: null
+                              # [Truncated for brevity, include your full example here]
+            default:
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/PlaidError'
+              description: Default error
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AuthGetRequest'
+
+    components:
+      schemas:
+        AuthGetResponse:
+          type: object
+          # Define the schema for AuthGetResponse
+        AuthGetRequest:
+          type: object
+          # Define the schema for AuthGetRequest
+        PlaidError:
+          type: object
+          # Define the schema for PlaidError
